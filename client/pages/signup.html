@@ -191,8 +191,9 @@
 
     <!-- JavaScript -->
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/api.js"></script>
     <script>
-        document.getElementById('signupForm').addEventListener('submit',async function(e) {
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Get form data
@@ -234,26 +235,20 @@
             }
             
             try {   
-                const response = await fetch("http://localhost:8080/signup", {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({name, email, password, age, gender, city})
-                });
+                const response = await API.signup({ name, email, password, age, gender, city });
                 const data = await response.json();
-                console.log(data);
-                if(response.ok) {
-                    alert("Signup Succesfull");
+                
+                if (response.ok) {
+                    alert("Signup Successful! Please log in to continue.");
                     window.location.href = "login.html";
                 } else {
-                    alert("Err: ", data.message);     
+                    alert("Error: " + (data.message || "Signup failed"));     
                 }
-            } catch(err) {
-                console.log("Network err: ", err.message);
+            } catch (err) {
+                console.error("Network error: ", err);
+                alert('Network error. Please try again.');
             }
         });
-
     </script>
 </body>
 </html>
