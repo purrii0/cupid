@@ -80,7 +80,7 @@
                                     <input type="password" id="password" name="password" required
                                            class="w-full px-4 py-3 border-2 border-black rounded-none bg-white text-black placeholder-gray-500 focus:outline-none focus:border-[var(--dark-pink-500)] transition-colors"
                                            placeholder="Create a strong password">
-                                    <p class="text-xs text-[var(--dark-pink-700)] mt-1">Password must be at least 8 characters long</p>
+                                    <p class="text-xs text-[var(--dark-pink-700)] mt-1">Password must be at least 8 characters with uppercase, lowercase, and numbers</p>
                                 </div>
 
                                 <!-- Confirm Password Field -->
@@ -106,7 +106,6 @@
                                             <option value="">Select gender</option>
                                             <option value="male">Male</option>
                                             <option value="female">Female</option>
-                                            <option value="non-binary">Non-binary</option>
                                             <option value="other">Other</option>
                                         </select>
                                     </div>
@@ -193,8 +192,9 @@
     <!-- JavaScript -->
     <script src="assets/js/login.js"></script>
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/api.js"></script>
     <script>
-        document.getElementById('signupForm').addEventListener('submit',async function(e) {
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Get form data
@@ -215,6 +215,13 @@
                 return;
             }
             
+            // Validate name (only letters and spaces)
+            const nameRegex = /^[a-zA-Z\s]+$/;
+            if (!nameRegex.test(firstName) || !nameRegex.test(lastName)) {
+                alert('Names can only contain letters and spaces');
+                return;
+            }
+            
             if (password !== confirmPassword) {
                 alert('Passwords do not match');
                 return;
@@ -225,8 +232,22 @@
                 return;
             }
             
+            // Check password complexity
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+            if (!passwordRegex.test(password)) {
+                alert('Password must contain at least one lowercase letter, one uppercase letter, and one number');
+                return;
+            }
+            
             if (age < 18) {
                 alert('You must be at least 18 years old to join Cupid');
+                return;
+            }
+            
+            // Validate city (letters, spaces, commas, periods, hyphens)
+            const cityRegex = /^[a-zA-Z\s,.-]+$/;
+            if (!cityRegex.test(city)) {
+                alert('City name contains invalid characters. Only letters, spaces, commas, periods, and hyphens are allowed.');
                 return;
             }
             
@@ -236,26 +257,26 @@
             }
             
             try {   
-                const response = await fetch("http://localhost:8080/signup", {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({name, email, password, age, gender, city})
-                });
+                const response = await API.signup({ name, email, password, age, gender, city });
                 const data = await response.json();
-                console.log(data);
-                if(response.ok) {
-                    alert("Signup Succesfull");
+                
+                if (response.ok) {
+                    alert("Signup Successful! Please log in to continue.");
                     window.location.href = "login.html";
                 } else {
-                    alert("Err: ", data.message);     
+                    // Handle validation errors more gracefully
+                    if (data.errors && Array.isArray(data.errors)) {
+                        const errorMessages = data.errors.map(err => `${err.field}: ${err.message}`).join('\n');
+                        alert("Validation errors:\n" + errorMessages);
+                    } else {
+                        alert("Error: " + (data.message || "Signup failed"));     
+                    }
                 }
-            } catch(err) {
-                console.log("Network err: ", err.message);
+            } catch (err) {
+                console.error("Network error: ", err);
+                alert('Network error. Please try again.');
             }
         });
-
     </script>
 </body>
 </html>

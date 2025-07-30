@@ -61,94 +61,81 @@
                 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div class="max-w-4xl mx-auto">
                         
-                        <!-- Profile Header -->
-                        <div class="card p-8 mb-8">
-                            <div class="flex flex-col md:flex-row items-center gap-8">
-                                <!-- Profile Picture -->
-                                <div class="relative">
-                                    <img src="assets/images/default-avatar.png" alt="Your Profile" class="w-32 h-32 rounded-full object-cover border-4 border-black">
-                                </div>
-                                
-                                <!-- Profile Info -->
-                                <div class="flex-1 text-center md:text-left">
-                                    <h2 class="text-3xl font-black text-black mb-2">John Doe, 28</h2>
-                                    <p class="text-lg text-[var(--dark-pink-800)] mb-4">📍 San Francisco, CA</p>
-                                    
-                                    <div class="flex flex-wrap justify-center md:justify-start gap-4 mb-4">
-                                        <div class="text-center">
-                                            <div class="text-2xl font-bold text-[var(--dark-pink-500)]">42</div>
-                                            <div class="text-sm text-[var(--dark-pink-800)]">Matches</div>
-                                        </div>
-                                        <div class="text-center">
-                                            <div class="text-2xl font-bold text-[var(--dark-pink-500)]">128</div>
-                                            <div class="text-sm text-[var(--dark-pink-800)]">Likes</div>
-                                        </div>
-                                        <div class="text-center">
-                                            <div class="text-2xl font-bold text-[var(--dark-pink-500)]">95%</div>
-                                            <div class="text-sm text-[var(--dark-pink-800)]">Profile Complete</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <a href="edit-profile.html" class="btn-primary">Edit Profile</a>
-                                </div>
-                            </div>
+                        <!-- Loading State -->
+                        <div class="text-center py-12" id="loadingState">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--dark-pink-500)]"></div>
+                            <p class="mt-2 text-[var(--dark-pink-800)]">Loading profile...</p>
                         </div>
 
-                        <!-- Profile Details Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            
-                            <!-- About Me -->
-                            <div class="card p-6">
-                                <h3 class="text-xl font-bold text-black mb-4">About Me</h3>
-                                <p class="text-[var(--dark-pink-800)] mb-4">
-                                    I'm a passionate photographer and adventure seeker who loves exploring new places and meeting interesting people. 
-                                    When I'm not behind the camera, you can find me hiking, trying new restaurants, or planning my next travel destination.
-                                </p>
-                                <p class="text-[var(--dark-pink-800)]">
-                                    Looking for someone who shares my love for adventure and isn't afraid to try new things. 
-                                    Let's create amazing memories together!
-                                </p>
-                            </div>
+                        <!-- Error State -->
+                        <div class="text-center py-12 hidden" id="errorState">
+                            <p class="text-red-600 mb-4">Failed to load profile. Please try again.</p>
+                            <button class="btn-secondary" onclick="loadProfile()">Retry</button>
+                        </div>
 
-                            <!-- Basic Info -->
-                            <div class="card p-6">
-                                <h3 class="text-xl font-bold text-black mb-4">Basic Info</h3>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between">
-                                        <span class="text-black font-semibold">Height:</span>
-                                        <span class="text-[var(--dark-pink-800)]">6'0" (183 cm)</span>
+                        <!-- Profile Content -->
+                        <div id="profileContent" class="hidden">
+                            <!-- Profile Header -->
+                            <div class="card p-8 mb-8">
+                                <div class="flex flex-col md:flex-row items-center gap-8">
+                                    <!-- Profile Picture -->
+                                    <div class="relative">
+                                        <img id="profileImage" src="assets/images/default-avatar.png" alt="Profile" class="w-32 h-32 rounded-full object-cover border-4 border-black">
                                     </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-black font-semibold">Education:</span>
-                                        <span class="text-[var(--dark-pink-800)]">Bachelor's Degree</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-black font-semibold">Occupation:</span>
-                                        <span class="text-[var(--dark-pink-800)]">Software Engineer</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-black font-semibold">Relationship:</span>
-                                        <span class="text-[var(--dark-pink-800)]">Single</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-black font-semibold">Looking for:</span>
-                                        <span class="text-[var(--dark-pink-800)]">Long-term</span>
+                                    
+                                    <!-- Profile Info -->
+                                    <div class="flex-1 text-center md:text-left">
+                                        <h2 id="profileName" class="text-3xl font-black text-black mb-2">Loading...</h2>
+                                        <p id="profileLocation" class="text-lg text-[var(--dark-pink-800)] mb-4">📍 Loading...</p>
+                                        
+                                        <div class="flex flex-wrap justify-center md:justify-start gap-4 mb-4">
+                                            <div class="text-center">
+                                                <div id="profileMatches" class="text-2xl font-bold text-[var(--dark-pink-500)]">0</div>
+                                                <div class="text-sm text-[var(--dark-pink-800)]">Matches</div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div id="profileLikes" class="text-2xl font-bold text-[var(--dark-pink-500)]">0</div>
+                                                <div class="text-sm text-[var(--dark-pink-800)]">Likes</div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div id="profileComplete" class="text-2xl font-bold text-[var(--dark-pink-500)]">0%</div>
+                                                <div class="text-sm text-[var(--dark-pink-800)]">Profile Complete</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="editButtonContainer">
+                                            <a href="edit-profile.html" class="btn-primary">Edit Profile</a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Interests -->
-                            <div class="card p-6">
-                                <h3 class="text-xl font-bold text-black mb-4">Interests</h3>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="px-3 py-1 bg-[var(--dark-pink-200)] border-2 border-black text-black text-sm font-medium rounded-full">📸 Photography</span>
-                                    <span class="px-3 py-1 bg-[var(--dark-pink-200)] border-2 border-black text-black text-sm font-medium rounded-full">🥾 Hiking</span>
-                                    <span class="px-3 py-1 bg-[var(--dark-pink-200)] border-2 border-black text-black text-sm font-medium rounded-full">✈️ Travel</span>
-                                    <span class="px-3 py-1 bg-[var(--dark-pink-200)] border-2 border-black text-black text-sm font-medium rounded-full">🍕 Foodie</span>
-                                    <span class="px-3 py-1 bg-[var(--dark-pink-200)] border-2 border-black text-black text-sm font-medium rounded-full">🎵 Music</span>
-                                    <span class="px-3 py-1 bg-[var(--dark-pink-200)] border-2 border-black text-black text-sm font-medium rounded-full">🏃‍♂️ Running</span>
-                                    <span class="px-3 py-1 bg-[var(--dark-pink-200)] border-2 border-black text-black text-sm font-medium rounded-full">📚 Reading</span>
-                                    <span class="px-3 py-1 bg-[var(--dark-pink-200)] border-2 border-black text-black text-sm font-medium rounded-full">🎮 Gaming</span>
+                            <!-- Profile Details Grid -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                
+                                <!-- About Me -->
+                                <div class="card p-6">
+                                    <h3 class="text-xl font-bold text-black mb-4">About Me</h3>
+                                    <div id="aboutMe" class="text-[var(--dark-pink-800)]">
+                                        No bio available yet.
+                                    </div>
+                                </div>
+
+                                <!-- Basic Info -->
+                                <div class="card p-6">
+                                    <h3 class="text-xl font-bold text-black mb-4">Basic Info</h3>
+                                    <div class="space-y-3" id="basicInfo">
+                                        <!-- Will be populated dynamically -->
+                                    </div>
+                                </div>
+
+                                <!-- Interests -->
+                                <div class="card p-6">
+                                    <h3 class="text-xl font-bold text-black mb-4">Interests</h3>
+                                    <div id="interests" class="flex flex-wrap gap-2">
+                                        <span class="text-[var(--dark-pink-800)]">No interests added yet.</span>
+                                    </div>
+                                </div>
                                 </div>
                             </div>
 
@@ -206,44 +193,182 @@
 
     <!-- JavaScript -->
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/api.js"></script>
     <script>
-        // Mobile menu toggle
-        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenu.classList.toggle('hidden');
-        });
+        let isOwnProfile = true;
+        let currentUser = null;
 
-        // Edit buttons functionality
-        document.querySelectorAll('.btn-secondary').forEach(button => {
-            button.addEventListener('click', function() {
-                if (this.textContent.includes('Privacy Settings')) {
-                    alert('Privacy settings would open here');
-                } else if (this.textContent.includes('Notification Settings')) {
-                    alert('Notification settings would open here');
-                } else if (this.textContent.includes('Account Settings')) {
-                    alert('Account settings would open here');
-                }
-            });
-        });
-
-        // Deactivate account
-        document.querySelector('.text-red-600').addEventListener('click', function() {
-            if (confirm('Are you sure you want to deactivate your account? This action can be reversed later.')) {
-                alert('Account deactivation functionality would be implemented here');
-            }
-        });
-
-        // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            if (confirm('Are you sure you want to logout?')) {
-                // Clear stored tokens
-                localStorage.removeItem('token');
-                sessionStorage.removeItem('token');
-                
-                // Redirect to login page
+        // Get user ID from URL params or use current user
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+        
+        if (userId) {
+            isOwnProfile = false;
+        } else {
+            // Check authentication for own profile
+            if (!isAuthenticated()) {
                 window.location.href = 'login.html';
             }
-        });
+        }
+
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        if (mobileMenuToggle && mobileMenu) {
+            mobileMenuToggle.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+
+        // Load profile data
+        async function loadProfile() {
+            try {
+                showLoadingState();
+                
+                const response = await API.getUserProfile(userId);
+                
+                if (!response || !response.ok) {
+                    throw new Error('Failed to fetch profile');
+                }
+
+                const data = await response.json();
+                console.log('Profile data received:', data); // Debug log
+                
+                // Check if data has user property
+                currentUser = data.user || data;
+                
+                if (!currentUser) {
+                    throw new Error('No user data received');
+                }
+                
+                renderProfile(currentUser);
+                showProfileContent();
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showErrorState();
+            }
+        }
+
+        // Render profile data
+        function renderProfile(user) {
+            console.log('Rendering profile for user:', user); // Debug log
+            
+            // Profile image and basic info
+            document.getElementById('profileImage').src = user.photo_url || 'assets/images/default-avatar.png';
+            document.getElementById('profileName').textContent = `${user.name || 'Unknown'}, ${user.age || 'N/A'}`;
+            document.getElementById('profileLocation').textContent = `📍 ${user.city || user.location || 'Location not specified'}`;
+            
+            // Stats
+            document.getElementById('profileMatches').textContent = user.matches || 0;
+            document.getElementById('profileLikes').textContent = user.likes || 0;
+            document.getElementById('profileComplete').textContent = `${user.profile_complete_percentage || 20}%`;
+            
+            // About me - check multiple possible fields
+            const aboutMeElement = document.getElementById('aboutMe');
+            const bioText = user.about_me || user.bio || 'No bio available yet.';
+            aboutMeElement.innerHTML = `<p class="text-[var(--dark-pink-800)]">${bioText}</p>`;
+            
+            // Basic info
+            renderBasicInfo(user);
+            
+            // Interests
+            renderInterests(user);
+            
+            // Hide edit button if viewing someone else's profile
+            if (!isOwnProfile) {
+                const editContainer = document.getElementById('editButtonContainer');
+                if (editContainer) {
+                    editContainer.style.display = 'none';
+                }
+            }
+        }
+
+        // Render basic info section
+        function renderBasicInfo(user) {
+            const basicInfoElement = document.getElementById('basicInfo');
+            const fields = [
+                { label: 'Age', value: user.age },
+                { label: 'Height', value: user.height },
+                { label: 'Education', value: user.education },
+                { label: 'Occupation', value: user.occupation },
+                { label: 'Relationship Status', value: user.relationship_status },
+                { label: 'Looking for', value: user.looking_for },
+                { label: 'Gender', value: user.gender },
+                { label: 'Location', value: user.location || user.city }
+            ];
+
+            const validFields = fields.filter(field => field.value && field.value !== 'null' && field.value !== '');
+            
+            if (validFields.length > 0) {
+                basicInfoElement.innerHTML = validFields.map(field => `
+                    <div class="flex justify-between">
+                        <span class="text-black font-semibold">${field.label}:</span>
+                        <span class="text-[var(--dark-pink-800)]">${field.value}</span>
+                    </div>
+                `).join('');
+            } else {
+                basicInfoElement.innerHTML = '<p class="text-[var(--dark-pink-800)]">No additional information available.</p>';
+            }
+        }
+
+        // Render interests section
+        function renderInterests(user) {
+            const interestsElement = document.getElementById('interests');
+            
+            // Check for hobbies in different possible formats
+            let hobbies = [];
+            if (user.hobbies && typeof user.hobbies === 'string' && user.hobbies.trim() !== '') {
+                hobbies = user.hobbies.split(',').map(h => h.trim()).filter(h => h !== '');
+            } else if (user.interests && Array.isArray(user.interests)) {
+                hobbies = user.interests;
+            } else if (user.interests && typeof user.interests === 'string') {
+                hobbies = user.interests.split(',').map(h => h.trim()).filter(h => h !== '');
+            }
+            
+            if (hobbies.length > 0) {
+                interestsElement.innerHTML = hobbies.map(hobby => `
+                    <span class="px-3 py-1 bg-[var(--dark-pink-200)] border-2 border-black text-black text-sm font-medium rounded-full">
+                        ${hobby}
+                    </span>
+                `).join('');
+            } else {
+                interestsElement.innerHTML = '<span class="text-[var(--dark-pink-800)]">No interests added yet.</span>';
+            }
+        }
+
+        // UI state management
+        function showLoadingState() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('profileContent').classList.add('hidden');
+        }
+
+        function showErrorState() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+            document.getElementById('profileContent').classList.add('hidden');
+        }
+
+        function showProfileContent() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('profileContent').classList.remove('hidden');
+        }
+
+        // Logout functionality
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to logout?')) {
+                    logout();
+                }
+            });
+        }
+
+        // Initial load
+        loadProfile();
     </script>
 </body>
 </html>

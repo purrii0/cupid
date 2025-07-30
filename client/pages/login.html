@@ -135,6 +135,7 @@
         </div>
     </div>>
     <!-- JavaScript -->
+    <script src="assets/js/api.js"></script>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -150,30 +151,28 @@
             }
             
             try {
-                const response = await fetch("http://localhost:8080/signin", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({email, password})
-                });
+                const response = await API.signin({ email, password });
                 const data = await response.json();
-                console.log(data);
-                if(response.ok) {
-                    alert("Sign In Succesfull");
-                    if(document.querySelector("#remember").checked) {
+                
+                if (response.ok) {
+                    alert("Sign In Successful");
+                    
+                    // Store token
+                    if (document.querySelector("#remember").checked) {
                         localStorage.setItem("token", data.token);
                     } else { 
                         sessionStorage.setItem("token", data.token);
                     }
+                    
+                    // Redirect to discover page
                     window.location.href = "discover.html";
                 } else {
-                    alert("Err", data.message);
+                    alert("Error: " + (data.message || "Login failed"));
                 }
             } catch (err) {
                 console.error('Network error:', err);
+                alert('Network error. Please try again.');
             }
-            
         });
     </script>
 </body>

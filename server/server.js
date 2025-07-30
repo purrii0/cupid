@@ -1,30 +1,57 @@
 // main server logic
 const verifytoken = require("./middleware/auth.middleware.js");
 const express = require("express");
+const http = require("http");
+const socketIo = require("socket.io");
 const app = express();
+const server = http.createServer(app);
 
 const {signup, signin} = require("./controllers/auth.controller.js");
-const {getUsers, getProfile, getUsersSwipe} = require("./controllers/user.controller.js");
+const userRoutes = require("./routes/user.routes.js");
+const messageRoutes = require("./routes/message.routes.js");
+const { initializeWebSocket } = require("./sockets/ws.js");
 
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, '.env') });
 
-const port = process.env.PORT
+const port = process.env.PORT || 8080;
+console.log("Port from env:", process.env.PORT);
+console.log("Using port:", port);
 
 const cors = require('cors');
-app.use(cors());
+app.use(cors({
+  origin: "*", // In production, specify your frontend domain
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
+// Initialize Socket.IO with CORS
+const io = socketIo(server, {
+  cors: {
+    origin: "*", // In production, specify your frontend domain
+    methods: ["GET", "POST"]
+  }
+});
+
+// Initialize WebSocket functionality
+initializeWebSocket(io);
+
 app.use(express.json());
 
+// Auth routes
 app.post("/signup", signup);
-app.post("/signin", signin); 
-app.post("/getuser", verifytoken, getUsers);
-app.post("/getprofile", verifytoken, getProfile);
-app.get("/getuserswipe", verifytoken, getUsersSwipe);
-app.post("/test", (req, res) => {
-    res.status(200).json({ message: "POST /test works", body: req.body });
+app.post("/signin", signin);
+
+// User routes
+app.use("/api", userRoutes);
+
+// Message routes
+app.use("/api", messageRoutes);
+
+app.get("/", (req, res)=>{
+    res.status(200).send("Cupid API Server is running!");
 });
-app.get("/", async(req, res)=>{
-    res.status(200).send("Hello");
-});
-app.listen(port, () => {
-    console.log(`Listening to the port: ${port}`); 
+
+server.listen(port, () => {
+    console.log(`Cupid server listening on port: ${port}`); 
 });

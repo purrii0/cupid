@@ -73,6 +73,43 @@
             </div>
           </div>
 
+<<<<<<< HEAD
+                        <!-- Profile Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="profileGrid">
+                            <!-- Loading State -->
+                            <div class="col-span-full text-center py-8" id="loadingState">
+                                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--dark-pink-500)]"></div>
+                                <p class="mt-2 text-[var(--dark-pink-800)]">Loading profiles...</p>
+                            </div>
+                            
+                            <!-- Error State -->
+                            <div class="col-span-full text-center py-8 hidden" id="errorState">
+                                <p class="text-red-600">Failed to load profiles. Please try again.</p>
+                                <button class="btn-secondary mt-4" onclick="loadProfiles()">Retry</button>
+                            </div>
+                            
+                            <!-- Empty State -->
+                            <div class="col-span-full text-center py-8 hidden" id="emptyState">
+                                <p class="text-[var(--dark-pink-800)]">No profiles found. Try adjusting your filters.</p>
+                            </div>
+                        </div>
+
+                        <!-- Load More Button -->
+                        <div class="text-center mt-8 hidden" id="loadMoreContainer">
+                            <button class="btn-secondary px-8 py-3" id="loadMoreBtn">Load More Profiles</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Footer -->
+            <footer class="text-center py-6 border-t-2 border-black bg-[var(--dark-pink-200)] bg-opacity-50">  
+                    <p class="text-sm text-[var(--dark-pink-800)]">
+                        © 2025 Cupid. All rights reserved. Find love, authentically.
+                    </p>
+                </div>
+            </footer>
+=======
           <!-- mobile menu -->
           <nav
             id="mobile-menu"
@@ -87,6 +124,7 @@
               >
             </div>
           </nav>
+>>>>>>> ffabfd0f44c00fa6feb87b1d4e7a2a03e2a4aafb
         </div>
       </header>
 
@@ -185,6 +223,198 @@
     </div>
   </div>
 
+<<<<<<< HEAD
+    <!-- JavaScript -->
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script>
+        let currentProfiles = [];
+        let offset = 0;
+        const limit = 20;
+
+        // Check authentication
+        if (!isAuthenticated()) {
+            window.location.href = 'login.html';
+        }
+
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Load profiles from API
+        async function loadProfiles(reset = false) {
+            if (reset) {
+                offset = 0;
+                currentProfiles = [];
+                document.getElementById('profileGrid').innerHTML = `
+                    <div class="col-span-full text-center py-8" id="loadingState">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--dark-pink-500)]"></div>
+                        <p class="mt-2 text-[var(--dark-pink-800)]">Loading profiles...</p>
+                    </div>
+                `;
+            }
+
+            try {
+                const response = await API.getUsers();
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch profiles');
+                }
+
+                const data = await response.json();
+                const profiles = data.users || [];
+
+                if (profiles.length === 0 && currentProfiles.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+
+                currentProfiles = reset ? profiles : [...currentProfiles, ...profiles];
+                renderProfiles(profiles, reset);
+                
+                // Show/hide load more button
+                const loadMoreContainer = document.getElementById('loadMoreContainer');
+                if (profiles.length === limit) {
+                    loadMoreContainer.classList.remove('hidden');
+                } else {
+                    loadMoreContainer.classList.add('hidden');
+                }
+
+            } catch (error) {
+                console.error('Error loading profiles:', error);
+                showErrorState();
+            }
+        }
+
+        // Render profiles to the grid
+        function renderProfiles(profiles, reset = false) {
+            const profileGrid = document.getElementById('profileGrid');
+            
+            if (reset) {
+                profileGrid.innerHTML = '';
+            } else {
+                // Remove loading/error states
+                const states = ['loadingState', 'errorState', 'emptyState'];
+                states.forEach(stateId => {
+                    const element = document.getElementById(stateId);
+                    if (element) element.remove();
+                });
+            }
+
+            profiles.forEach(profile => {
+                const profileCard = createProfileCard(profile);
+                profileGrid.appendChild(profileCard);
+            });
+        }
+
+        // Create individual profile card
+        function createProfileCard(profile) {
+            const card = document.createElement('div');
+            card.className = 'profile-card card overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
+            card.innerHTML = `
+                <img src="${profile.photo_url || 'assets/images/default-avatar.png'}" 
+                     alt="${profile.name}" class="w-full h-64 object-cover">
+                <div class="p-4">
+                    <h3 class="text-lg font-bold text-black mb-1">${profile.name}, ${profile.age}</h3>
+                    <p class="text-sm text-[var(--dark-pink-800)] mb-2">📍 ${profile.city || 'Location not specified'}</p>
+                    <p class="text-sm text-black mb-3">${profile.about_me || 'No bio available yet.'}</p>
+                    <div class="flex gap-2">
+                        <button class="btn-secondary flex-1 text-sm py-2 view-profile-btn" data-user-id="${profile.id}">
+                            View Profile
+                        </button>
+                        <button class="btn-primary flex-1 text-sm py-2 like-btn" data-user-id="${profile.id}">
+                            💕 Like
+                        </button>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        // Show error state
+        function showErrorState() {
+            const profileGrid = document.getElementById('profileGrid');
+            profileGrid.innerHTML = `
+                <div class="col-span-full text-center py-8" id="errorState">
+                    <p class="text-red-600">Failed to load profiles. Please try again.</p>
+                    <button class="btn-secondary mt-4" onclick="loadProfiles(true)">Retry</button>
+                </div>
+            `;
+        }
+
+        // Show empty state
+        function showEmptyState() {
+            const profileGrid = document.getElementById('profileGrid');
+            profileGrid.innerHTML = `
+                <div class="col-span-full text-center py-8" id="emptyState">
+                    <p class="text-[var(--dark-pink-800)]">No profiles found. Be the first to create a profile!</p>
+                    <a href="profile.html" class="btn-primary mt-4">Create Profile</a>
+                </div>
+            `;
+        }
+
+        // Event delegation for dynamically created buttons
+        document.getElementById('profileGrid').addEventListener('click', function(e) {
+            if (e.target.classList.contains('like-btn')) {
+                e.preventDefault();
+                const userId = e.target.getAttribute('data-user-id');
+                handleLike(e.target, userId);
+            } else if (e.target.classList.contains('view-profile-btn')) {
+                e.preventDefault();
+                const userId = e.target.getAttribute('data-user-id');
+                viewProfile(userId);
+            }
+        });
+
+        // Handle like button click
+        function handleLike(button, userId) {
+            if (button.textContent.includes('💕 Like')) {
+                button.textContent = '✅ Liked';
+                button.style.backgroundColor = '#4CAF50';
+                // TODO: Send like to backend
+                console.log('Liked user:', userId);
+            } else {
+                button.textContent = '💕 Like';
+                button.style.backgroundColor = 'var(--dark-pink-500)';
+                // TODO: Remove like from backend
+                console.log('Unliked user:', userId);
+            }
+        }
+
+        // View profile function
+        function viewProfile(userId) {
+            // TODO: Navigate to detailed profile page
+            window.location.href = `profile.html?id=${userId}`;
+        }
+
+        // Load more profiles
+        document.getElementById('loadMoreBtn').addEventListener('click', function() {
+            offset += limit;
+            loadProfiles(false);
+        });
+
+        // Apply filters
+        document.querySelector('.btn-primary').addEventListener('click', function() {
+            if (this.textContent.includes('Apply Filters')) {
+                // TODO: Implement filtering logic
+                console.log('Applying filters...');
+                loadProfiles(true);
+            }
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to logout?')) {
+                logout();
+            }
+        });
+
+        // Initial load
+        loadProfiles(true);
+    </script>
+=======
   <!-- javascript -->
   <script src="assets/js/main.js"></script>
 
@@ -323,5 +553,6 @@
         mobileMenu.classList.toggle("hidden");
       });
   </script>
+>>>>>>> ffabfd0f44c00fa6feb87b1d4e7a2a03e2a4aafb
 </body>
 </html>
