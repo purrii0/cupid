@@ -3,18 +3,108 @@
 const connection = require("../config/db.js");
 const userModel = require("../models/user.model.js");
 const { profileUpdateSchema } = require("../schema/schema.js");
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const bcrypt = require('bcrypt');
 require("dotenv").config();
+
+// Configure multer for photo uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadPath = path.join(__dirname, '../uploads/profiles');
+        // Ensure directory exists
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
+    },
+    filename: function (req, file, cb) {
+        // Create unique filename with timestamp and user ID
+        const uniqueName = `${req.user.id}_${Date.now()}${path.extname(file.originalname)}`;
+        cb(null, uniqueName);
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    // Allow only image files
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only image files are allowed!'), false);
+    }
+};
+
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+    }
+});
+
+// Photo upload endpoint
+const uploadPhoto = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No file uploaded'
+            });
+        }
+
+        const userId = req.user.id;
+        const photoUrl = `/uploads/profiles/${req.file.filename}`;
+
+        // Update user's profile with new photo URL
+        await connection.execute(
+            'INSERT INTO profile_info (user_id, photo_url) VALUES (?, ?) ON DUPLICATE KEY UPDATE photo_url = VALUES(photo_url)',
+            [userId, photoUrl]
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: 'Photo uploaded successfully',
+            photo_url: photoUrl
+        });
+    } catch (error) {
+        console.error('Error uploading photo:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
+    }
+};
 
 // Get all users except current user for discovery
 const getUsers = async (req, res) => {
     try {
         const userId = req.user?.id;
-        let query = "SELECT u.id, u.name, u.age, u.gender, u.city, p.photo_url, p.about_me, p.occupation FROM users u LEFT JOIN profile_info p ON u.id = p.user_id";
+        let query = `
+            SELECT u.id, u.name, u.age, u.gender, u.city, p.photo_url, p.bio, p.occupation 
+            FROM users u 
+            LEFT JOIN profile_info p ON u.id = p.user_id
+            WHERE u.account_paused = FALSE
+        `;
         let params = [];
         
         if (userId) {
-            query += " WHERE u.id != ?";
-            params.push(userId);
+            // Exclude current user, blocked users, and users who blocked current user
+            query += ` AND u.id != ? 
+                       AND u.id NOT IN (
+                           SELECT blocked_id FROM blocked_users WHERE blocker_id = ?
+                       )
+                       AND u.id NOT IN (
+                           SELECT blocker_id FROM blocked_users WHERE blocked_id = ?
+                       )
+                       AND u.id NOT IN (
+                           SELECT user1_id FROM swipes WHERE user2_id = ? AND is_like = FALSE
+                       )
+                       AND u.id NOT IN (
+                           SELECT user2_id FROM swipes WHERE user1_id = ? AND is_like = FALSE
+                       )`;
+            params.push(userId, userId, userId, userId, userId);
         }
         
         query += " ORDER BY u.created_at DESC LIMIT 20";
@@ -25,7 +115,7 @@ const getUsers = async (req, res) => {
         const usersWithDefaults = users.map(user => ({
             ...user,
             photo_url: user.photo_url || 'assets/images/default-avatar.png',
-            about_me: user.about_me || 'No bio available yet.',
+            bio: user.bio || 'No bio available yet.',
             occupation: user.occupation || 'Not specified'
         }));
         
@@ -96,12 +186,23 @@ const getUserProfile = async (req, res) => {
 // Update user profile
 const updateProfile = async (req, res) => {
     try {
+        // Validate input data
+        const parsedData = profileUpdateSchema.safeParse(req.body);
+        if (!parsedData.success) {
+            return res.status(400).json({
+                message: "Validation failed",
+                errors: parsedData.error.issues.map(issue => ({
+                    field: issue.path.join('.'),
+                    message: issue.message
+                }))
+            });
+        }
         const userId = req.user.id;
         const {
             name, age, city, bio, hobbies, preferences,
             height, education, occupation, relationship_status,
             looking_for, about_me, location
-        } = req.body;
+        } = parsedData.data;
         
         // Update users table
         if (name || age || city || bio || hobbies || preferences) {
@@ -207,9 +308,209 @@ const getUserStats = async (req, res) => {
     }
 };
 
+// Get user settings
+const getSettings = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const query = `
+            SELECT 
+                show_distance,
+                show_age,
+                max_distance,
+                notifications_matches,
+                notifications_messages,
+                notifications_likes,
+                notifications_profile_views,
+                notifications_email,
+                account_paused
+            FROM users 
+            WHERE id = ?
+        `;
+
+        const [rows] = await db.execute(query, [userId]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ settings: rows[0] });
+    } catch (error) {
+        console.error('Error getting settings:', error);
+        res.status(500).json({ error: 'Failed to get settings' });
+    }
+};
+
+// Update user settings
+const updateSettings = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const {
+            show_distance,
+            show_age,
+            max_distance,
+            notifications_matches,
+            notifications_messages,
+            notifications_likes,
+            notifications_profile_views,
+            notifications_email
+        } = req.body;
+
+        const query = `
+            UPDATE users SET
+                show_distance = COALESCE(?, show_distance),
+                show_age = COALESCE(?, show_age),
+                max_distance = COALESCE(?, max_distance),
+                notifications_matches = COALESCE(?, notifications_matches),
+                notifications_messages = COALESCE(?, notifications_messages),
+                notifications_likes = COALESCE(?, notifications_likes),
+                notifications_profile_views = COALESCE(?, notifications_profile_views),
+                notifications_email = COALESCE(?, notifications_email),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `;
+
+        await db.execute(query, [
+            show_distance,
+            show_age,
+            max_distance,
+            notifications_matches,
+            notifications_messages,
+            notifications_likes,
+            notifications_profile_views,
+            notifications_email,
+            userId
+        ]);
+
+        res.json({ message: 'Settings updated successfully' });
+    } catch (error) {
+        console.error('Error updating settings:', error);
+        res.status(500).json({ error: 'Failed to update settings' });
+    }
+};
+
+// Change password
+const changePassword = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Current password and new password are required' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+        }
+
+        // Get current password hash
+        const [userRows] = await db.execute('SELECT password FROM users WHERE id = ?', [userId]);
+        
+        if (userRows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Verify current password
+        const isValidPassword = await bcrypt.compare(currentPassword, userRows[0].password);
+        if (!isValidPassword) {
+            return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+
+        // Hash new password
+        const saltRounds = 12;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        // Update password
+        await db.execute(
+            'UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [hashedPassword, userId]
+        );
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Error changing password:', error);
+        res.status(500).json({ error: 'Failed to change password' });
+    }
+};
+
+// Pause account
+const pauseAccount = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        await db.execute(
+            'UPDATE users SET account_paused = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [userId]
+        );
+
+        res.json({ message: 'Account paused successfully' });
+    } catch (error) {
+        console.error('Error pausing account:', error);
+        res.status(500).json({ error: 'Failed to pause account' });
+    }
+};
+
+// Reactivate account
+const reactivateAccount = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        await db.execute(
+            'UPDATE users SET account_paused = FALSE, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [userId]
+        );
+
+        res.json({ message: 'Account reactivated successfully' });
+    } catch (error) {
+        console.error('Error reactivating account:', error);
+        res.status(500).json({ error: 'Failed to reactivate account' });
+    }
+};
+
+// Delete account
+const deleteAccount = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { confirmPassword } = req.body;
+
+        if (!confirmPassword) {
+            return res.status(400).json({ error: 'Password confirmation required' });
+        }
+
+        // Get current password hash
+        const [userRows] = await db.execute('SELECT password FROM users WHERE id = ?', [userId]);
+        
+        if (userRows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Verify password
+        const isValidPassword = await bcrypt.compare(confirmPassword, userRows[0].password);
+        if (!isValidPassword) {
+            return res.status(401).json({ error: 'Password is incorrect' });
+        }
+
+        // Delete user (cascades to related tables)
+        await db.execute('DELETE FROM users WHERE id = ?', [userId]);
+
+        res.json({ message: 'Account deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting account:', error);
+        res.status(500).json({ error: 'Failed to delete account' });
+    }
+};
+
 module.exports = {
     getUsers,
     getUserProfile,
     updateProfile,
-    getUserStats
+    getUserStats,
+    uploadPhoto,
+    upload,
+    getSettings,
+    updateSettings,
+    changePassword,
+    pauseAccount,
+    reactivateAccount,
+    deleteAccount
 };

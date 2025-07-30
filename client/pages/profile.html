@@ -105,6 +105,12 @@
                                         <div id="editButtonContainer">
                                             <a href="edit-profile.html" class="btn-primary">Edit Profile</a>
                                         </div>
+                                        
+                                        <!-- Action buttons for viewing other users' profiles -->
+                                        <div id="otherUserActions" class="hidden space-y-2">
+                                            <button id="blockUserBtn" class="btn-secondary bg-red-600 hover:bg-red-700 text-white">Block User</button>
+                                            <button id="reportUserBtn" class="btn-secondary bg-orange-600 hover:bg-orange-700 text-white">Report User</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -278,8 +284,25 @@
             // Hide edit button if viewing someone else's profile
             if (!isOwnProfile) {
                 const editContainer = document.getElementById('editButtonContainer');
+                const otherUserActions = document.getElementById('otherUserActions');
+                
                 if (editContainer) {
                     editContainer.style.display = 'none';
+                }
+                
+                if (otherUserActions) {
+                    otherUserActions.classList.remove('hidden');
+                }
+            } else {
+                const editContainer = document.getElementById('editButtonContainer');
+                const otherUserActions = document.getElementById('otherUserActions');
+                
+                if (editContainer) {
+                    editContainer.style.display = 'block';
+                }
+                
+                if (otherUserActions) {
+                    otherUserActions.classList.add('hidden');
                 }
             }
         }
@@ -366,8 +389,150 @@
             });
         }
 
+        // Block user functionality
+        document.getElementById('blockUserBtn').addEventListener('click', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('id');
+            if (!userId) return;
+
+            const reason = prompt('Reason for blocking (optional):');
+            blockUser(userId, reason);
+        });
+
+        // Report user functionality
+        document.getElementById('reportUserBtn').addEventListener('click', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('id');
+            if (!userId) return;
+
+            showReportModal(userId);
+        });
+
+        // Block user function
+        async function blockUser(userId, reason) {
+            if (!confirm('Are you sure you want to block this user? This will remove any existing matches and conversations.')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/moderation/block-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        blockedUserId: parseInt(userId),
+                        reason: reason
+                    })
+                });
+
+                if (response.ok) {
+                    alert('User blocked successfully');
+                    window.location.href = 'discover.html';
+                } else {
+                    const error = await response.json();
+                    alert('Error blocking user: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Error blocking user:', error);
+                alert('Failed to block user. Please try again.');
+            }
+        }
+
+        // Report user function
+        async function reportUser(userId, reason, description) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/moderation/report-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        reportedUserId: parseInt(userId),
+                        reason: reason,
+                        description: description
+                    })
+                });
+
+                if (response.ok) {
+                    alert('User reported successfully. Thank you for helping keep our community safe.');
+                    hideReportModal();
+                } else {
+                    const error = await response.json();
+                    alert('Error reporting user: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Error reporting user:', error);
+                alert('Failed to report user. Please try again.');
+            }
+        }
+
+        // Show report modal
+        function showReportModal(userId) {
+            document.getElementById('reportModal').classList.remove('hidden');
+            document.getElementById('reportUserId').value = userId;
+        }
+
+        // Hide report modal
+        function hideReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+            document.getElementById('reportForm').reset();
+        }
+
+        // Submit report
+        document.getElementById('submitReport').addEventListener('click', function() {
+            const userId = document.getElementById('reportUserId').value;
+            const reason = document.getElementById('reportReason').value;
+            const description = document.getElementById('reportDescription').value;
+
+            if (!reason) {
+                alert('Please select a reason for reporting');
+                return;
+            }
+
+            reportUser(userId, reason, description);
+        });
+
         // Initial load
         loadProfile();
     </script>
+
+    <!-- Report User Modal -->
+    <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">Report User</h3>
+            <form id="reportForm">
+                <input type="hidden" id="reportUserId">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Reason for reporting:</label>
+                    <select id="reportReason" class="w-full p-2 border border-gray-300 rounded" required>
+                        <option value="">Select a reason</option>
+                        <option value="inappropriate_behavior">Inappropriate Behavior</option>
+                        <option value="fake_profile">Fake Profile</option>
+                        <option value="harassment">Harassment</option>
+                        <option value="spam">Spam</option>
+                        <option value="inappropriate_photos">Inappropriate Photos</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Additional details (optional):</label>
+                    <textarea id="reportDescription" class="w-full p-2 border border-gray-300 rounded h-24" placeholder="Provide additional details about your report..."></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideReportModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
+                    <button type="button" id="submitReport" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>

@@ -1,6 +1,7 @@
 // Message controller for handling message-related requests
 
 const messageModel = require('../models/message.model.js');
+const swipeModel = require('../models/swipe.model.js');
 
 const messageController = {
   // Get user's conversations
@@ -59,6 +60,30 @@ const messageController = {
         });
       }
 
+      // Get conversation participants
+      const [convCheck] = await messageModel.connection.execute(
+        'SELECT user1_id, user2_id FROM conversations WHERE id = ?',
+        [conversationId]
+      );
+      if (!convCheck.length) {
+        return res.status(404).json({ success: false, message: 'Conversation not found' });
+      }
+      const { user1_id, user2_id } = convCheck[0];
+      const otherUserId = user1_id === userId ? user2_id : user1_id;
+
+      // Check if users are matched
+      const user1 = Math.min(userId, otherUserId);
+      const user2 = Math.max(userId, otherUserId);
+      const matches = await swipeModel.getMatches(userId);
+      const isMatched = matches.some(m => (m.user1_id === user1 && m.user2_id === user2));
+
+      if (!isMatched) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only message a matched user.'
+        });
+      }
+
       const message = await messageModel.sendMessage(conversationId, userId, messageText.trim());
 
       res.status(201).json({
@@ -91,6 +116,19 @@ const messageController = {
         return res.status(400).json({
           success: false,
           message: 'Cannot start conversation with yourself'
+        });
+      }
+
+      // Check if users are matched
+      const user1 = Math.min(userId, otherUserId);
+      const user2 = Math.max(userId, otherUserId);
+      const matches = await swipeModel.getMatches(userId);
+      const isMatched = matches.some(m => (m.user1_id === user1 && m.user2_id === user2));
+
+      if (!isMatched) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only start a conversation with a matched user.'
         });
       }
 

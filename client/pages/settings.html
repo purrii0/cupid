@@ -84,7 +84,7 @@
                                             <p class="text-sm text-[var(--dark-pink-800)]">Get notified when you receive new messages</p>
                                         </div>
                                         <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" class="sr-only peer" checked>
+                                            <input type="checkbox" class="sr-only peer" data-setting="notifications_messages" checked>
                                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--dark-pink-300)] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--dark-pink-500)]"></div>
                                         </label>
                                     </div>
@@ -95,7 +95,7 @@
                                             <p class="text-sm text-[var(--dark-pink-800)]">Get notified when you have new matches</p>
                                         </div>
                                         <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" class="sr-only peer" checked>
+                                            <input type="checkbox" class="sr-only peer" data-setting="notifications_matches" checked>
                                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--dark-pink-300)] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--dark-pink-500)]"></div>
                                         </label>
                                     </div>
@@ -106,7 +106,18 @@
                                             <p class="text-sm text-[var(--dark-pink-800)]">Get notified when someone views your profile</p>
                                         </div>
                                         <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" class="sr-only peer">
+                                            <input type="checkbox" class="sr-only peer" data-setting="notifications_profile_views">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--dark-pink-300)] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--dark-pink-500)]"></div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <label class="text-black font-semibold">New Likes</label>
+                                            <p class="text-sm text-[var(--dark-pink-800)]">Get notified when someone likes your profile</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" class="sr-only peer" data-setting="notifications_likes" checked>
                                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--dark-pink-300)] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--dark-pink-500)]"></div>
                                         </label>
                                     </div>
@@ -117,7 +128,7 @@
                                             <p class="text-sm text-[var(--dark-pink-800)]">Receive notifications via email</p>
                                         </div>
                                         <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" class="sr-only peer" checked>
+                                            <input type="checkbox" class="sr-only peer" data-setting="notifications_email" checked>
                                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--dark-pink-300)] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--dark-pink-500)]"></div>
                                         </label>
                                     </div>
@@ -134,7 +145,7 @@
                                             <p class="text-sm text-[var(--dark-pink-800)]">Display your distance to other users</p>
                                         </div>
                                         <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" class="sr-only peer" checked>
+                                            <input type="checkbox" class="sr-only peer" data-setting="show_distance" checked>
                                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--dark-pink-300)] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--dark-pink-500)]"></div>
                                         </label>
                                     </div>
@@ -145,7 +156,7 @@
                                             <p class="text-sm text-[var(--dark-pink-800)]">Display your age on your profile</p>
                                         </div>
                                         <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" class="sr-only peer" checked>
+                                            <input type="checkbox" class="sr-only peer" data-setting="show_age" checked>
                                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--dark-pink-300)] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--dark-pink-500)]"></div>
                                         </label>
                                     </div>
@@ -276,17 +287,218 @@
         // Distance slider
         const distanceSlider = document.getElementById('distanceSlider');
         const distanceValue = document.getElementById('distanceValue');
-        
+
         distanceSlider.addEventListener('input', function() {
             distanceValue.textContent = this.value + ' miles';
         });
 
+        // Load current settings
+        async function loadSettings() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const response = await fetch('/api/users/settings', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const settings = data.settings;
+                    
+                    // Update UI with current settings
+                    document.getElementById('distanceSlider').value = settings.max_distance || 50;
+                    document.getElementById('distanceValue').textContent = (settings.max_distance || 50) + ' miles';
+                    
+                    // Update toggle switches
+                    const toggles = {
+                        'notifications_matches': settings.notifications_matches,
+                        'notifications_messages': settings.notifications_messages,
+                        'notifications_likes': settings.notifications_likes,
+                        'notifications_profile_views': settings.notifications_profile_views,
+                        'notifications_email': settings.notifications_email,
+                        'show_distance': settings.show_distance,
+                        'show_age': settings.show_age
+                    };
+
+                    Object.entries(toggles).forEach(([key, value]) => {
+                        const checkbox = document.querySelector(`[data-setting="${key}"]`);
+                        if (checkbox) {
+                            checkbox.checked = value;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Save settings
+        async function saveSettings() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const settings = {
+                    max_distance: parseInt(document.getElementById('distanceSlider').value),
+                    notifications_matches: document.querySelector('[data-setting="notifications_matches"]')?.checked,
+                    notifications_messages: document.querySelector('[data-setting="notifications_messages"]')?.checked,
+                    notifications_likes: document.querySelector('[data-setting="notifications_likes"]')?.checked,
+                    notifications_profile_views: document.querySelector('[data-setting="notifications_profile_views"]')?.checked,
+                    notifications_email: document.querySelector('[data-setting="notifications_email"]')?.checked,
+                    show_distance: document.querySelector('[data-setting="show_distance"]')?.checked,
+                    show_age: document.querySelector('[data-setting="show_age"]')?.checked
+                };
+
+                const response = await fetch('/api/users/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    alert('Settings saved successfully!');
+                } else {
+                    const error = await response.json();
+                    alert('Error saving settings: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                alert('Failed to save settings. Please try again.');
+            }
+        }
+
+        // Change password
+        async function changePassword() {
+            const currentPassword = prompt('Enter your current password:');
+            if (!currentPassword) return;
+
+            const newPassword = prompt('Enter your new password (minimum 6 characters):');
+            if (!newPassword || newPassword.length < 6) {
+                alert('New password must be at least 6 characters long');
+                return;
+            }
+
+            const confirmPassword = prompt('Confirm your new password:');
+            if (newPassword !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/users/change-password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Password changed successfully!');
+                } else {
+                    const error = await response.json();
+                    alert('Error changing password: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                alert('Failed to change password. Please try again.');
+            }
+        }
+
+        // Pause account
+        async function pauseAccount() {
+            if (!confirm('Are you sure you want to pause your account? You can reactivate it at any time.')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/users/pause-account', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Account paused successfully');
+                } else {
+                    const error = await response.json();
+                    alert('Error pausing account: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Error pausing account:', error);
+                alert('Failed to pause account. Please try again.');
+            }
+        }
+
+        // Delete account
+        async function deleteAccount() {
+            if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                return;
+            }
+
+            if (!confirm('This will permanently delete all your data. Are you absolutely sure?')) {
+                return;
+            }
+
+            const confirmPassword = prompt('Enter your password to confirm account deletion:');
+            if (!confirmPassword) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/users/delete-account', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        confirmPassword
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Account deleted successfully');
+                    localStorage.removeItem('token');
+                    sessionStorage.removeItem('token');
+                    window.location.href = 'login.html';
+                } else {
+                    const error = await response.json();
+                    alert('Error deleting account: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alert('Failed to delete account. Please try again.');
+            }
+        }
+
+        // Load settings on page load
+        loadSettings();
+
         // Save changes button
         document.querySelector('.btn-primary').addEventListener('click', function() {
             if (this.textContent.includes('Save All Changes')) {
-                alert('Settings saved successfully!');
+                saveSettings();
             } else if (this.textContent.includes('Change Password')) {
-                alert('Change password functionality would open here');
+                changePassword();
             }
         });
 
@@ -294,20 +506,12 @@
         document.querySelectorAll('.bg-red-600').forEach(button => {
             button.addEventListener('click', function() {
                 if (this.textContent.includes('Pause')) {
-                    if (confirm('Are you sure you want to pause your account? You can reactivate it at any time.')) {
-                        alert('Account paused successfully');
-                    }
+                    pauseAccount();
                 } else if (this.textContent.includes('Delete')) {
-                    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-                        if (confirm('This will permanently delete all your data. Are you absolutely sure?')) {
-                            alert('Account deletion process would begin here');
-                        }
-                    }
+                    deleteAccount();
                 }
             });
-        });
-
-        // Toggle switches
+        });        // Toggle switches
         document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 // Auto-save functionality would be implemented here

@@ -2,7 +2,20 @@
 
 const express = require('express');
 const router = express.Router();
-const { getUsers, getUserProfile, updateProfile, getUserStats } = require('../controllers/user.controller.js');
+const { 
+    getUsers, 
+    getUserProfile, 
+    updateProfile, 
+    getUserStats, 
+    uploadPhoto, 
+    upload,
+    getSettings,
+    updateSettings,
+    changePassword,
+    pauseAccount,
+    reactivateAccount,
+    deleteAccount
+} = require("../controllers/user.controller.js");
 const authenticateToken = require('../middleware/auth.middleware.js');
 
 // Get all users for discovery (with optional auth to exclude current user)
@@ -27,12 +40,24 @@ router.get('/users', (req, res, next) => {
 router.get('/profile', authenticateToken, getUserProfile);
 
 // Get specific user profile by ID (public)
+// Get specific user profile by ID (public)
 router.get('/profile/:id', getUserProfile);
 
 // Update current user profile (requires auth)
 router.put('/profile', authenticateToken, updateProfile);
 
+// Upload profile photo (requires auth)
+router.post('/upload-photo', authenticateToken, upload.single('photo'), uploadPhoto);
+
 // Get user statistics (requires auth)
 router.get('/stats', authenticateToken, getUserStats);
+
+// Settings routes
+router.get('/settings', authenticateToken, getSettings);
+router.put('/settings', authenticateToken, updateSettings);
+router.put('/change-password', authenticateToken, changePassword);
+router.put('/pause-account', authenticateToken, pauseAccount);
+router.put('/reactivate-account', authenticateToken, reactivateAccount);
+router.delete('/delete-account', authenticateToken, deleteAccount);
 
 module.exports = router;

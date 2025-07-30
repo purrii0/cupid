@@ -1,5 +1,4 @@
-// API utility functions for frontend
-
+// Enhanced API utility functions for frontend
 const API_BASE_URL = 'http://localhost:3000';
 
 // Helper function to get auth token
@@ -7,7 +6,7 @@ function getAuthToken() {
     return localStorage.getItem('token') || sessionStorage.getItem('token');
 }
 
-// Helper function to make authenticated requests
+// Helper function to make authenticated requests with enhanced error handling
 async function makeAuthenticatedRequest(url, options = {}) {
     const token = getAuthToken();
     
@@ -34,13 +33,20 @@ async function makeAuthenticatedRequest(url, options = {}) {
         if (response.status === 401) {
             localStorage.removeItem('token');
             sessionStorage.removeItem('token');
-            window.location.href = 'login.html';
+            if (window.notifications) {
+                window.notifications.warning('Session expired. Please log in again.');
+            }
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1500);
             return null;
         }
         
         return response;
     } catch (error) {
-        console.error('API request failed:', error);
+        if (window.ErrorHandler) {
+            window.ErrorHandler.handle(error, `API Request to ${url}`);
+        }
         throw error;
     }
 }

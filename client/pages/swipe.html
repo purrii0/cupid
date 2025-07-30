@@ -319,17 +319,45 @@
         }
 
         // Handle swipe action
-        function handleSwipe(direction) {
+        async function handleSwipe(direction) {
             const topCard = cards[0];
             const userId = topCard.dataset.userId;
+            
+            try {
+                // Send swipe to backend
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const response = await fetch('/api/swipe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        swipeeId: parseInt(userId),
+                        direction: direction
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    console.log(`${direction === 'right' ? 'Liked' : 'Passed'} user:`, userId);
+                    
+                    // Handle match if it occurred
+                    if (result.match && direction === 'right') {
+                        showMatchNotification(userId);
+                    }
+                } else {
+                    console.error('Swipe failed:', result.message);
+                }
+            } catch (error) {
+                console.error('Error sending swipe:', error);
+            }
             
             // Animate card out
             const finalX = direction === 'right' ? 1000 : -1000;
             topCard.style.transform = `translateX(${finalX}px) rotate(${direction === 'right' ? 30 : -30}deg)`;
             topCard.style.opacity = '0';
-
-            // Log the action (TODO: Send to backend)
-            console.log(`${direction === 'right' ? 'Liked' : 'Passed'} user:`, userId);
 
             // Remove card after animation
             setTimeout(() => {
@@ -357,27 +385,57 @@
                 // Update card positions
                 updateCardPositions();
             }, 300);
+        }
 
-            if (direction === 'right') {
-                // TODO: Handle match logic
-                console.log('Potential match!');
+        // Show match notification
+        function showMatchNotification(userId) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            notification.innerHTML = `
+                <div class="bg-white p-8 rounded-lg text-center max-w-sm mx-4">
+                    <h2 class="text-2xl font-bold text-pink-600 mb-4">It's a Match! 💖</h2>
+                    <p class="text-gray-600 mb-6">You and this person liked each other!</p>
+                    <div class="flex gap-4">
+                        <button onclick="this.closest('.fixed').remove()" class="btn-secondary flex-1">Keep Swiping</button>
+                        <button onclick="window.location.href='messages.html'" class="btn-primary flex-1">Send Message</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Remove card after animation
+        setTimeout(() => {
+            topCard.remove();
+            cards.shift();
+            currentProfileIndex++;
+
+            // Load next card if available
+            if (currentProfileIndex + cards.length < profiles.length) {
+                const nextProfile = profiles[currentProfileIndex + cards.length - 1];
+                if (nextProfile) {
+                    const newCard = createCard(nextProfile, cards.length);
+                    document.getElementById('swipeContainer').appendChild(newCard);
+                    cards.push(newCard);
+                }
             }
-        }
 
-        // Update card stack positions
-        function updateCardPositions() {
-            cards.forEach((card, index) => {
-                card.style.zIndex = -index;
-                card.className = `swipe-card absolute inset-0 card overflow-hidden cursor-grab active:cursor-grabbing`;
-                
-                if (index === 1) card.classList.add('book-stack-card-2');
-                if (index === 2) card.classList.add('book-stack-card-3');
-            });
-        }
+            // Initialize listeners for new top card
+            if (cards.length > 0) {
+                initializeSwipeListeners();
+            } else if (currentProfileIndex >= profiles.length) {
+                showEmptyState();
+            }
 
-        // Action button handlers
-        document.addEventListener('DOMContentLoaded', function() {
-            // Pass button
+            // Update card positions
+            updateCardPositions();
             document.getElementById('passBtn')?.addEventListener('click', function() {
                 if (cards.length > 0) {
                     handleSwipe('left');

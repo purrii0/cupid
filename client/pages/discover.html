@@ -165,7 +165,7 @@
         });
 
         // Load profiles from API
-        async function loadProfiles(reset = false) {
+        async function loadProfiles(reset = false, filters = {}) {
             if (reset) {
                 offset = 0;
                 currentProfiles = [];
@@ -178,7 +178,18 @@
             }
 
             try {
-                const response = await API.getUsers();
+                // Build query parameters with filters
+                const params = new URLSearchParams({
+                    limit: limit.toString(),
+                    offset: offset.toString(),
+                    ...filters
+                });
+                
+                const response = await fetch(`/api/users?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
+                    }
+                });
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch profiles');
@@ -290,24 +301,75 @@
         });
 
         // Handle like button click
-        function handleLike(button, userId) {
+        async function handleLike(button, userId) {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            
             if (button.textContent.includes('💕 Like')) {
-                button.textContent = '✅ Liked';
-                button.style.backgroundColor = '#4CAF50';
-                // TODO: Send like to backend
-                console.log('Liked user:', userId);
+                try {
+                    const response = await fetch('/api/swipe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            swipeeId: parseInt(userId),
+                            direction: 'right'
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        button.textContent = '✅ Liked';
+                        button.style.backgroundColor = '#4CAF50';
+                        console.log('Liked user:', userId);
+                        
+                        // Show match notification if it's a match
+                        if (result.match) {
+                            showMatchNotification(userId);
+                        }
+                    } else {
+                        console.error('Like failed:', result.message);
+                    }
+                } catch (error) {
+                    console.error('Error sending like:', error);
+                }
             } else {
+                // For unlike, we could implement a different endpoint or just update UI
                 button.textContent = '💕 Like';
                 button.style.backgroundColor = 'var(--dark-pink-500)';
-                // TODO: Remove like from backend
                 console.log('Unliked user:', userId);
             }
         }
 
         // View profile function
         function viewProfile(userId) {
-            // TODO: Navigate to detailed profile page
             window.location.href = `profile.html?id=${userId}`;
+        }
+
+        // Show match notification (same as swipe page)
+        function showMatchNotification(userId) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            notification.innerHTML = `
+                <div class="bg-white p-8 rounded-lg text-center max-w-sm mx-4">
+                    <h2 class="text-2xl font-bold text-pink-600 mb-4">It's a Match! 💖</h2>
+                    <p class="text-gray-600 mb-6">You and this person liked each other!</p>
+                    <div class="flex gap-4">
+                        <button onclick="this.closest('.fixed').remove()" class="btn-secondary flex-1">Keep Swiping</button>
+                        <button onclick="window.location.href='messages.html'" class="btn-primary flex-1">Send Message</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
         }
 
         // Load more profiles
@@ -319,9 +381,18 @@
         // Apply filters
         document.querySelector('.btn-primary').addEventListener('click', function() {
             if (this.textContent.includes('Apply Filters')) {
-                // TODO: Implement filtering logic
-                console.log('Applying filters...');
-                loadProfiles(true);
+                const ageMin = document.querySelector('input[placeholder="Min age"]').value;
+                const ageMax = document.querySelector('input[placeholder="Max age"]').value;
+                const location = document.querySelector('input[placeholder="City"]').value;
+                
+                // Build filter parameters
+                const filters = {};
+                if (ageMin) filters.ageMin = parseInt(ageMin);
+                if (ageMax) filters.ageMax = parseInt(ageMax);
+                if (location) filters.city = location;
+                
+                console.log('Applying filters:', filters);
+                loadProfiles(true, filters);
             }
         });
 
