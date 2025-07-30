@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="assets/styles/main.css">
     <link rel="stylesheet" href="assets/styles/components.css">
     <link rel="stylesheet" href="assets/styles/utilities.css">
+    <script src="assets/js/login.js"></script
 </head>
 
 <body class="bg-brutalist-dark-pink" style='font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;'>
@@ -34,7 +35,7 @@
                             <a class="nav-link" href="swipe.html">Swipe</a>
                             <a class="nav-link" href="messages.html">Messages</a>
                             <a class="nav-link" href="profile.html">Profile</a>
-                            <button id="logoutBtn" class="btn-secondary">Logout</button>
+                            <button id="logoutBtn" class="btn-primary">Logout</button>
                         </nav>
                         <!-- Mobile Menu Button -->
                         <div class="md:hidden">
@@ -553,315 +554,450 @@
             transform: translateY(14px) translateX(-8px) scale(0.93) !important;
         }
     </style>
-    <script>
-        let currentCardIndex = 0;
-        const cards = ['card1', 'card2', 'card3'];
-        let isDragging = false;
-        let startX = 0;
-        let currentX = 0;
-        let cardBeingDragged = null;
+<script>
+let currentCardIndex = 0;
+const cards = ['card1', 'card2', 'card3', 'card4', 'card5']; // Added more cards
+let isDragging = false;
+let startX = 0;
+let currentX = 0;
+let cardBeingDragged = null;
 
-        // Sample profiles for cycling
-        const profiles = [
-            { name: "Emma, 25", location: "2 miles away", bio: "Love hiking, coffee, and good conversations. Looking for someone genuine to explore life with." },
-            { name: "Alex, 28", location: "5 miles away", bio: "Photographer and world traveler. Seeking an adventure companion to share stories with." },
-            { name: "Sarah, 26", location: "3 miles away", bio: "Book lover and yoga enthusiast. Let's explore the city together and find hidden gems!" },
-            { name: "Mike, 30", location: "7 miles away", bio: "Chef and foodie. Let me cook for you on our first date!" },
-            { name: "Lisa, 24", location: "4 miles away", bio: "Artist and music lover. Looking for my creative soulmate." },
-            { name: "James, 29", location: "6 miles away", bio: "Tech enthusiast and dog lover. Swipe right if you love Golden Retrievers!" }
-        ];
+let profiles = [];
+let profileIndex = 0;
+let offset = 0;
+const limit = 20; // Increased batch size
+let userGender = 'female'; // This should be set based on user's preference
 
-        let profileIndex = 3; // Start after the initial 3 profiles
+// Mobile menu toggle
+const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+const mobileMenu = document.getElementById('mobile-menu');
 
-        // Mobile menu toggle
-        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        if (mobileMenuToggle && mobileMenu) {
-            mobileMenuToggle.addEventListener('click', function() {
-                mobileMenu.classList.toggle('hidden');
-            });
-            
-            // Close mobile menu when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!mobileMenu.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
-                    mobileMenu.classList.add('hidden');
-                }
-            });
+if (mobileMenuToggle && mobileMenu) {
+    mobileMenuToggle.addEventListener('click', function () {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!mobileMenu.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+            mobileMenu.classList.add('hidden');
         }
+    });
+}
 
-        // Button event listeners
-        document.getElementById('passBtn').addEventListener('click', () => swipeCard('left'));
-        document.getElementById('likeBtn').addEventListener('click', () => swipeCard('right'));
-        document.getElementById('superLikeBtn').addEventListener('click', () => swipeCard('up'));
+// Button event listeners
+document.getElementById('passBtn').addEventListener('click', () => swipeCard('left'));
+document.getElementById('likeBtn').addEventListener('click', () => swipeCard('right'));
+document.getElementById('superLikeBtn').addEventListener('click', () => swipeCard('up'));
 
-        // Touch/Mouse events for swipe functionality
-        function initializeCardEvents() {
-            cards.forEach(cardId => {
-                const card = document.getElementById(cardId);
-                if (!card) return;
-                
-                // Mouse events
-                card.addEventListener('mousedown', startDrag, { passive: false });
-                document.addEventListener('mousemove', drag, { passive: false });
-                document.addEventListener('mouseup', endDrag);
-                
-                // Touch events
-                card.addEventListener('touchstart', startDrag, { passive: false });
-                card.addEventListener('touchmove', drag, { passive: false });
-                card.addEventListener('touchend', endDrag);
-            });
+// Touch/Mouse events for swipe functionality
+function initializeCardEvents() {
+    cards.forEach(cardId => {
+        const card = document.getElementById(cardId);
+        if (!card) return;
+
+        // Mouse events
+        card.addEventListener('mousedown', startDrag, { passive: false });
+        document.addEventListener('mousemove', drag, { passive: false });
+        document.addEventListener('mouseup', endDrag);
+
+        // Touch events
+        card.addEventListener('touchstart', startDrag, { passive: false });
+        card.addEventListener('touchmove', drag, { passive: false });
+        card.addEventListener('touchend', endDrag);
+    });
+}
+
+initializeCardEvents();
+
+function startDrag(e) {
+    const targetCard = e.target.closest('.swipe-card');
+    if (!targetCard || targetCard.id !== cards[currentCardIndex]) return;
+
+    e.preventDefault();
+    isDragging = true;
+    cardBeingDragged = targetCard;
+
+    const clientX = e.type === 'mousedown' ? e.clientX :
+        e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+    startX = clientX;
+
+    if (cardBeingDragged) {
+        cardBeingDragged.style.transition = 'none';
+        cardBeingDragged.style.cursor = 'grabbing';
+        cardBeingDragged.style.zIndex = '1000'; // Bring to front while dragging
+    }
+}
+
+function drag(e) {
+    if (!isDragging || !cardBeingDragged) return;
+
+    e.preventDefault();
+
+    const clientX = e.type === 'mousemove' ? e.clientX :
+        e.touches && e.touches[0] ? e.touches[0].clientX : 0;
+    currentX = clientX - startX;
+
+    const rotation = currentX * 0.1;
+    const lift = Math.abs(currentX) * 0.2;
+
+    cardBeingDragged.style.transform = `translateX(${currentX}px) translateY(-${lift}px) rotate(${rotation}deg) scale(1.05)`;
+    cardBeingDragged.style.boxShadow = `
+        0 ${30 + lift}px ${60 + lift}px rgba(44, 24, 16, 0.3),
+        0 ${20 + lift}px ${30 + lift}px rgba(44, 24, 16, 0.2)
+    `;
+
+    // Show indicators based on swipe direction
+    const likeIndicator = cardBeingDragged.querySelector('[id^="likeIndicator"]');
+    const nopeIndicator = cardBeingDragged.querySelector('[id^="nopeIndicator"]');
+
+    if (likeIndicator && nopeIndicator) {
+        if (currentX > 50) {
+            likeIndicator.style.opacity = Math.min(1, (currentX - 50) / 100);
+            nopeIndicator.style.opacity = 0;
+        } else if (currentX < -50) {
+            nopeIndicator.style.opacity = Math.min(1, (-currentX - 50) / 100);
+            likeIndicator.style.opacity = 0;
+        } else {
+            likeIndicator.style.opacity = 0;
+            nopeIndicator.style.opacity = 0;
         }
-        
-        initializeCardEvents();
+    }
+}
 
-        function startDrag(e) {
-            const targetCard = e.target.closest('.swipe-card');
-            if (!targetCard || targetCard.id !== cards[currentCardIndex]) return;
-            
-            e.preventDefault();
-            isDragging = true;
-            cardBeingDragged = targetCard;
-            
-            const clientX = e.type === 'mousedown' ? e.clientX : 
-                           e.touches && e.touches[0] ? e.touches[0].clientX : 0;
-            startX = clientX;
-            
-            if (cardBeingDragged) {
-                cardBeingDragged.style.transition = 'none';
-                cardBeingDragged.style.cursor = 'grabbing';
-            }
-        }
+function endDrag(e) {
+    if (!isDragging || !cardBeingDragged) return;
 
-        function drag(e) {
-            if (!isDragging || !cardBeingDragged) return;
-            
-            e.preventDefault();
-            
-            const clientX = e.type === 'mousemove' ? e.clientX : 
-                           e.touches && e.touches[0] ? e.touches[0].clientX : 0;
-            currentX = clientX - startX;
-            
-            const rotation = currentX * 0.1;
-            const lift = Math.abs(currentX) * 0.2; // Lift the card as it's dragged
-            
-            cardBeingDragged.style.transform = `translateX(${currentX}px) translateY(-${lift}px) rotate(${rotation}deg) scale(1.05)`;
+    isDragging = false;
+
+    if (cardBeingDragged) {
+        cardBeingDragged.style.cursor = 'grab';
+
+        if (Math.abs(currentX) > 100) {
+            // Complete the swipe
+            const direction = currentX > 0 ? 'right' : 'left';
+            completeSwipe(cardBeingDragged, direction);
+        } else {
+            // Snap back to original position
+            cardBeingDragged.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+            cardBeingDragged.style.transform = getCardStackTransform(currentCardIndex);
             cardBeingDragged.style.boxShadow = `
-                0 ${30 + lift}px ${60 + lift}px rgba(44, 24, 16, 0.3),
-                0 ${20 + lift}px ${30 + lift}px rgba(44, 24, 16, 0.2)
+                0 25px 50px rgba(44, 24, 16, 0.25),
+                0 15px 25px rgba(44, 24, 16, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6)
             `;
-            
-            // Show indicators based on swipe direction
+
+            // Hide indicators
             const likeIndicator = cardBeingDragged.querySelector('[id^="likeIndicator"]');
             const nopeIndicator = cardBeingDragged.querySelector('[id^="nopeIndicator"]');
-            
-            if (likeIndicator && nopeIndicator) {
-                if (currentX > 50) {
-                    likeIndicator.style.opacity = Math.min(1, (currentX - 50) / 100);
-                    nopeIndicator.style.opacity = 0;
-                } else if (currentX < -50) {
-                    nopeIndicator.style.opacity = Math.min(1, (-currentX - 50) / 100);
-                    likeIndicator.style.opacity = 0;
-                } else {
-                    likeIndicator.style.opacity = 0;
-                    nopeIndicator.style.opacity = 0;
-                }
-            }
+            if (likeIndicator) likeIndicator.style.opacity = 0;
+            if (nopeIndicator) nopeIndicator.style.opacity = 0;
+        }
+    }
+
+    cardBeingDragged = null;
+    currentX = 0;
+}
+
+function swipeCard(direction) {
+    const currentCard = document.getElementById(cards[currentCardIndex]);
+    completeSwipe(currentCard, direction);
+}
+
+function completeSwipe(card, direction) {
+    const translateX = direction === 'right' ? '150vw' : direction === 'left' ? '-150vw' : '0';
+    const translateY = direction === 'up' ? '-150vh' : '0';
+    const rotation = direction === 'right' ? '45deg' : direction === 'left' ? '-45deg' : '0';
+
+    card.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.6s ease';
+    card.style.transform = `translateX(${translateX}) translateY(${translateY}) rotate(${rotation}) scale(0.8)`;
+    card.style.opacity = '0';
+    card.style.zIndex = '-1';
+
+    // Update stats
+    updateStats(direction);
+
+    setTimeout(() => {
+        // Completely remove the card from view and reset for future use
+        card.style.display = 'none';
+        card.style.transition = '';
+        card.style.transform = '';
+        card.style.opacity = '1';
+        card.style.zIndex = '';
+        moveToNextCard();
+    }, 600);
+}
+
+function getCardStackTransform(cardIndex) {
+    const stackPosition = cardIndex - currentCardIndex;
+    
+    if (stackPosition === 0) {
+        return 'translateY(0px) scale(1)';
+    } else if (stackPosition === 1) {
+        return 'translateY(8px) translateX(-4px) scale(0.96)';
+    } else if (stackPosition === 2) {
+        return 'translateY(16px) translateX(-8px) scale(0.92)';
+    } else if (stackPosition === 3) {
+        return 'translateY(24px) translateX(-12px) scale(0.88)';
+    } else {
+        return 'translateY(32px) translateX(-16px) scale(0.84)';
+    }
+}
+
+function moveToNextCard() {
+    // Move to next profile
+    profileIndex++;
+    currentCardIndex++;
+
+    // Check if we need to load more profiles
+    if (profileIndex >= profiles.length - 2) {
+        loadMoreProfiles();
+    }
+
+    // If we've run out of cards in the DOM, cycle back to the first ones
+    if (currentCardIndex >= cards.length) {
+        currentCardIndex = 0;
+    }
+
+    // Check if we have more profiles to show
+    if (profileIndex >= profiles.length) {
+        // Show no more cards message
+        document.getElementById('swipeContainer').style.display = 'none';
+        document.getElementById('noMoreCards').classList.remove('hidden');
+        return;
+    }
+
+    // Update all visible cards
+    updateCardStack();
+    
+    // Preload the next card if available
+    preloadNextCard();
+}
+
+function updateCardStack() {
+    for (let i = 0; i < cards.length; i++) {
+        const card = document.getElementById(cards[i]);
+        const profileIdx = profileIndex + i;
+        
+        if (profileIdx < profiles.length) {
+            updateCardContent(cards[i], profiles[profileIdx]);
+            card.style.display = 'block';
+            card.style.zIndex = cards.length - i;
+            card.style.transform = getCardStackTransform(i);
+        } else {
+            card.style.display = 'none';
+        }
+    }
+}
+
+async function updateCardContent(cardId, profile) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+
+    const nameElement = card.querySelector('h3');
+    const locationElement = card.querySelector('p');
+    const bioElement = card.querySelectorAll('p')[1];
+    const imageElement = card.querySelector('img');
+
+    if (nameElement) nameElement.textContent = `${profile.name}, ${profile.age || Math.floor(Math.random() * 20) + 20}`;
+    if (locationElement) locationElement.textContent = `📍 ${profile.location || 'Unknown'}`;
+    if (bioElement) bioElement.textContent = profile.bio || generateRandomBio();
+
+    // Set gender-appropriate random profile image
+    if (imageElement) {
+        const gender = userGender === 'male' ? 'women' : 'men'; // Show opposite gender
+        const randomId = Math.floor(Math.random() * 99) + 1;
+        imageElement.src = `https://randomuser.me/api/portraits/${gender}/${randomId}.jpg`;
+        imageElement.onerror = function() {
+            // Fallback to a different random image if one fails
+            const fallbackId = Math.floor(Math.random() * 50) + 1;
+            this.src = `https://randomuser.me/api/portraits/${gender}/${fallbackId}.jpg`;
+        };
+    }
+
+    card.style.opacity = '1';
+
+    // Reset indicators opacity
+    const likeIndicator = card.querySelector('[id^="likeIndicator"]');
+    const nopeIndicator = card.querySelector('[id^="nopeIndicator"]');
+    if (likeIndicator) likeIndicator.style.opacity = 0;
+    if (nopeIndicator) nopeIndicator.style.opacity = 0;
+}
+
+function generateRandomBio() {
+    const bios = [
+        "Love hiking and outdoor adventures 🏔️",
+        "Coffee enthusiast and bookworm 📚☕",
+        "Yoga instructor seeking zen moments 🧘‍♀️",
+        "Foodie exploring new cuisines 🍜",
+        "Dog lover and weekend explorer 🐕",
+        "Artist painting life in vibrant colors 🎨",
+        "Music lover with eclectic taste 🎵",
+        "Travel addict collecting memories ✈️",
+        "Fitness enthusiast staying active 💪",
+        "Beach lover chasing sunsets 🌅"
+    ];
+    return bios[Math.floor(Math.random() * bios.length)];
+}
+
+async function fetchProfiles(limit = 20, offset = 0) {
+    try {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) {
+            // Generate mock profiles if no token (for demo purposes)
+            return generateMockProfiles(limit);
         }
 
-        function endDrag(e) {
-            if (!isDragging || !cardBeingDragged) return;
-            
-            isDragging = false;
-            
-            if (cardBeingDragged) {
-                cardBeingDragged.style.cursor = 'grab';
-                
-                if (Math.abs(currentX) > 100) {
-                    // Complete the swipe
-                    const direction = currentX > 0 ? 'right' : 'left';
-                    completeSwipe(cardBeingDragged, direction);
-                } else {
-                    // Snap back to book stack position
-                    cardBeingDragged.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
-                    cardBeingDragged.style.transform = 'translateY(0px) scale(1)';
-                    cardBeingDragged.style.boxShadow = `
-                        0 25px 50px rgba(44, 24, 16, 0.25),
-                        0 15px 25px rgba(44, 24, 16, 0.15),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.6)
-                    `;
-                    
-                    // Hide indicators
-                    const likeIndicator = cardBeingDragged.querySelector('[id^="likeIndicator"]');
-                    const nopeIndicator = cardBeingDragged.querySelector('[id^="nopeIndicator"]');
-                    if (likeIndicator) likeIndicator.style.opacity = 0;
-                    if (nopeIndicator) nopeIndicator.style.opacity = 0;
-                }
+        const response = await fetch(`http://localhost:8080/getuserswipe?limit=${limit}&offset=${offset}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
-            
-            cardBeingDragged = null;
-            currentX = 0;
-        }
-
-        function swipeCard(direction) {
-            const currentCard = document.getElementById(cards[currentCardIndex]);
-            completeSwipe(currentCard, direction);
-        }
-
-        function completeSwipe(card, direction) {
-            const translateX = direction === 'right' ? '100vw' : direction === 'left' ? '-100vw' : '0';
-            const translateY = direction === 'up' ? '-100vh' : '0';
-            
-            card.style.transition = 'transform 0.5s ease';
-            card.style.transform = `translateX(${translateX}) translateY(${translateY}) rotate(${direction === 'right' ? '30deg' : direction === 'left' ? '-30deg' : '0'})`;
-            card.style.opacity = '0';
-            
-            // Update stats
-            updateStats(direction);
-            
-            setTimeout(() => {
-                // Hide current card and move to next
-                card.style.display = 'none';
-                moveToNextCard();
-            }, 500);
-        }
-
-        function moveToNextCard() {
-            currentCardIndex++;
-            
-            if (currentCardIndex >= cards.length) {
-                // Show no more cards message
-                document.getElementById('swipeContainer').style.display = 'none';
-                document.getElementById('noMoreCards').classList.remove('hidden');
-                return;
-            }
-            
-            // Update book stack positioning
-            for (let i = currentCardIndex; i < cards.length; i++) {
-                const card = document.getElementById(cards[i]);
-                const stackPosition = i - currentCardIndex;
-                
-                // Remove existing classes
-                card.classList.remove('book-stack-card-2', 'book-stack-card-3');
-                
-                if (stackPosition === 0) {
-                    // Top card (active)
-                    card.style.zIndex = 3;
-                    card.style.transform = 'translateY(0px) scale(1)';
-                } else if (stackPosition === 1) {
-                    // Second card
-                    card.classList.add('book-stack-card-2');
-                    card.style.zIndex = 2;
-                    card.style.transform = 'translateY(8px) translateX(-4px) scale(0.96)';
-                } else if (stackPosition === 2) {
-                    // Third card
-                    card.classList.add('book-stack-card-3');
-                    card.style.zIndex = 1;
-                    card.style.transform = 'translateY(16px) translateX(-8px) scale(0.92)';
-                }
-            }
-            
-            // Load new profile for the last card if available
-            if (profileIndex < profiles.length) {
-                loadNewProfile();
-            }
-        }
-
-        function loadNewProfile() {
-            if (profileIndex >= profiles.length) return;
-            
-            const lastCardIndex = (currentCardIndex + 2) % cards.length;
-            const lastCard = document.getElementById(cards[lastCardIndex]);
-            const profile = profiles[profileIndex];
-            
-            if (!lastCard || !profile) return;
-            
-            try {
-                // Update card content
-                const nameElement = lastCard.querySelector('h3');
-                const locationElement = lastCard.querySelector('p');
-                const bioElement = lastCard.querySelectorAll('p')[1];
-                
-                if (nameElement) nameElement.textContent = profile.name;
-                if (locationElement) locationElement.textContent = `📍 ${profile.location}`;
-                if (bioElement) bioElement.textContent = profile.bio;
-                
-                // Reset card state and apply book stack positioning
-                lastCard.style.display = 'block';
-                lastCard.style.opacity = '1';
-                lastCard.style.transition = '';
-                
-                // Set as third card in stack
-                lastCard.classList.remove('book-stack-card-2');
-                lastCard.classList.add('book-stack-card-3');
-                lastCard.style.zIndex = '1';
-                lastCard.style.transform = 'translateY(16px) translateX(-8px) scale(0.92)';
-                
-                // Hide indicators
-                const likeIndicator = lastCard.querySelector('[id^="likeIndicator"]');
-                const nopeIndicator = lastCard.querySelector('[id^="nopeIndicator"]');
-                if (likeIndicator) likeIndicator.style.opacity = 0;
-                if (nopeIndicator) nopeIndicator.style.opacity = 0;
-                
-                profileIndex++;
-            } catch (error) {
-                console.error('Error loading new profile:', error);
-            }
-        }
-
-        function updateStats(direction) {
-            try {
-                const swipesLeftElement = document.getElementById('swipesLeft');
-                const likesCountElement = document.getElementById('likesCount');
-                const matchesCountElement = document.getElementById('matchesCount');
-                
-                if (!swipesLeftElement || !likesCountElement || !matchesCountElement) {
-                    console.error('Stats elements not found');
-                    return;
-                }
-                
-                let swipesLeft = parseInt(swipesLeftElement.textContent) || 0;
-                swipesLeft = Math.max(0, swipesLeft - 1);
-                swipesLeftElement.textContent = swipesLeft;
-                
-                if (direction === 'right' || direction === 'up') {
-                    let likesCount = parseInt(likesCountElement.textContent) || 0;
-                    likesCount++;
-                    likesCountElement.textContent = likesCount;
-                    
-                    // Random chance of match
-                    if (Math.random() > 0.7) {
-                        let matchesCount = parseInt(matchesCountElement.textContent) || 0;
-                        matchesCount++;
-                        matchesCountElement.textContent = matchesCount;
-                        
-                        // Show match notification
-                        setTimeout(() => {
-                            alert('It\'s a Match! You can now start chatting.');
-                        }, 600);
-                    }
-                }
-            } catch (error) {
-                console.error('Error updating stats:', error);
-            }
-        }
-
-        // Prevent default drag behavior on images
-        document.querySelectorAll('img').forEach(img => {
-            img.addEventListener('dragstart', e => e.preventDefault());
         });
 
-        // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            if (confirm('Are you sure you want to logout?')) {
-                // Clear stored tokens
-                localStorage.removeItem('token');
-                sessionStorage.removeItem('token');
-                
-                // Redirect to login page
-                window.location.href = 'login.html';
-            }
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+            return data.data;
+        } else {
+            return generateMockProfiles(limit);
+        }
+    } catch (err) {
+        console.error('Fetch profiles error:', err);
+        return generateMockProfiles(limit);
+    }
+}
+
+function generateMockProfiles(count) {
+    const names = ['Alex', 'Jordan', 'Taylor', 'Casey', 'Morgan', 'Riley', 'Avery', 'Quinn', 'Sage', 'River'];
+    const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio'];
+    
+    const mockProfiles = [];
+    for (let i = 0; i < count; i++) {
+        mockProfiles.push({
+            name: names[Math.floor(Math.random() * names.length)],
+            age: Math.floor(Math.random() * 20) + 20,
+            location: cities[Math.floor(Math.random() * cities.length)],
+            bio: generateRandomBio()
         });
-    </script>
+    }
+    return mockProfiles;
+}
+
+async function loadInitialProfiles() {
+    profiles = await fetchProfiles(limit, offset);
+    offset += profiles.length;
+
+    if (profiles.length === 0) {
+        document.getElementById('swipeContainer').style.display = 'none';
+        document.getElementById('noMoreCards').classList.remove('hidden');
+        return;
+    }
+
+    profileIndex = 0;
+    currentCardIndex = 0;
+
+    // Initialize all cards with profiles
+    updateCardStack();
+}
+
+async function loadMoreProfiles() {
+    const newProfiles = await fetchProfiles(limit, offset);
+    offset += newProfiles.length;
+
+    if (newProfiles.length > 0) {
+        profiles = profiles.concat(newProfiles);
+    }
+}
+
+function preloadNextCard() {
+    // Preload the image for smoother experience
+    const nextProfileIndex = profileIndex + cards.length;
+    if (nextProfileIndex < profiles.length) {
+        const gender = userGender === 'male' ? 'women' : 'men';
+        const randomId = Math.floor(Math.random() * 99) + 1;
+        const img = new Image();
+        img.src = `https://randomuser.me/api/portraits/${gender}/${randomId}.jpg`;
+    }
+}
+
+function updateStats(direction) {
+    try {
+        const swipesLeftElement = document.getElementById('swipesLeft');
+        const likesCountElement = document.getElementById('likesCount');
+        const matchesCountElement = document.getElementById('matchesCount');
+
+        if (swipesLeftElement) {
+            let swipesLeft = parseInt(swipesLeftElement.textContent) || 0;
+            swipesLeft = Math.max(0, swipesLeft - 1);
+            swipesLeftElement.textContent = swipesLeft;
+        }
+
+        if (direction === 'right' || direction === 'up') {
+            if (likesCountElement) {
+                let likesCount = parseInt(likesCountElement.textContent) || 0;
+                likesCount++;
+                likesCountElement.textContent = likesCount;
+            }
+
+            // Random chance of match (30% chance)
+            if (Math.random() > 0.7 && matchesCountElement) {
+                let matchesCount = parseInt(matchesCountElement.textContent) || 0;
+                matchesCount++;
+                matchesCountElement.textContent = matchesCount;
+
+                // Show match notification
+                setTimeout(() => {
+                    alert('It\'s a Match! 🎉 You can now start chatting.');
+                }, 700);
+            }
+        }
+    } catch (error) {
+        console.error('Error updating stats:', error);
+    }
+}
+
+// Set user gender preference (you should set this based on user's actual preference)
+function setUserGender(gender) {
+    userGender = gender; // 'male' or 'female'
+}
+
+// Prevent default drag behavior on images
+document.querySelectorAll('img').forEach(img => {
+    img.addEventListener('dragstart', e => e.preventDefault());
+});
+
+// Logout functionality
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', function () {
+        if (confirm('Are you sure you want to logout?')) {
+            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+    });
+}
+
+// Keyboard shortcuts for better UX
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft') {
+        swipeCard('left');
+    } else if (e.key === 'ArrowRight') {
+        swipeCard('right');
+    } else if (e.key === 'ArrowUp') {
+        swipeCard('up');
+    }
+});
+
+// Load initial profiles on page load
+window.addEventListener('DOMContentLoaded', () => {
+    loadInitialProfiles();
+});
+</script>
 </body>
 </html>

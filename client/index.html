@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login iframe wrapper</title>
+  <style>
+    /* Make iframe fill entire viewport */
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      overflow: hidden;
+    }
+    iframe {
+      border: none;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <iframe src="/pages/login.html" id="loginIframe"></iframe>
+
+</body>
+</html>
+

@@ -1,5 +1,5 @@
 // main server logic
-
+const verifytoken = require("./middleware/auth.middleware.js");
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
